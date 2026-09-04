@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------- Auth (NextAuth / Auth.js standard models) ----------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String? // set when the user signs up with email+password
+  createdAt     DateTime  @default(now())
+
+  accounts Account[]
+  sessions Session[]
+  progress LessonProgress[]
+  runs     TerminalRun[]
+  messages TutorMessage[]
+  streak   Streak?
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------- Learning content ----------
+
+model Path {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  order       Int      @default(0)
+  tag         String // e.g. "PY", "JS", "AI"
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  pathId      String
+  path        Path     @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  slug        String
+  title       String
+  order       Int      @default(0)
+  content     String   @db.Text // markdown
+  starterCode String   @db.Text @default("")
+  language    String   @default("python") // maps to a Piston runtime
+
+  progress LessonProgress[]
+
+  @@unique([pathId, slug])
+}
+
+model LessonProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId    String
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  @@unique([userId, lessonId])
+}
+
+model Streak {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  current       Int      @default(0)
+  longest       Int      @default(0)
+  lastActiveDay DateTime?
+}
+
+// ---------- Terminal + tutor history ----------
+
+model TerminalRun {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language  String
+  code      String   @db.Text
+  stdout    String   @db.Text @default("")
+  stderr    String   @db.Text @default("")
+  createdAt DateTime @default(now())
+}
+
+model TutorMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String // "user" | "tutor"
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+}
