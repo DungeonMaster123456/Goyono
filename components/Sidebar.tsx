@@ -7,7 +7,8 @@ import Image from "next/image";
 
 const NAV = [
   { href: "/dashboard", label: "Overview", icon: "▦" },
-  { href: "/learn/python-foundations", label: "Paths", icon: "◈" },
+  { href: "/learn/html-css-foundations", label: "Paths", icon: "◈" },
+  { href: "/library", label: "Library", icon: "▤" },
   { href: "/dashboard#terminal", label: "Terminal", icon: "⌁" },
   { href: "/dashboard#tutor", label: "Guide", icon: "◐" },
 ];

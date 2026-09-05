@@ -30,8 +30,16 @@ export default function Terminal({
   const [output, setOutput] = useState<{ stdout: string; stderr: string } | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewKey, setPreviewKey] = useState(0);
+
+  const isHtml = language === "html";
 
   async function run() {
+    if (isHtml) {
+      // no execution service involved — just re-render the live preview
+      setPreviewKey((k) => k + 1);
+      return;
+    }
     setRunning(true);
     setError(null);
     setOutput(null);
@@ -96,7 +104,7 @@ export default function Terminal({
           )}
         </div>
         <button onClick={run} disabled={running} className="btn btn-primary" style={{ padding: "6px 14px", fontSize: 12.5 }}>
-          {running ? "Running…" : "Run ▸"}
+          {isHtml ? "Preview ▸" : running ? "Running…" : "Run ▸"}
         </button>
       </div>
 
@@ -119,31 +127,51 @@ export default function Terminal({
         }}
       />
 
-      <div
-        style={{
-          borderTop: "1px solid var(--line)",
-          background: "#000",
-          padding: 14,
-          fontFamily: "var(--mono)",
-          fontSize: 12.5,
-          minHeight: 90,
-          maxHeight: 260,
-          overflowY: "auto",
-        }}
-      >
-        {!output && !error && !running && (
-          <span style={{ color: "var(--ink-2)" }}>output will appear here</span>
-        )}
-        {running && <span style={{ color: "var(--ink-2)" }}>running…</span>}
-        {error && <span style={{ color: "var(--err)" }}>{error}</span>}
-        {output?.stdout && <pre style={{ margin: 0, color: "var(--ink-0)", whiteSpace: "pre-wrap" }}>{output.stdout}</pre>}
-        {output?.stderr && (
-          <pre style={{ margin: "8px 0 0", color: "var(--err)", whiteSpace: "pre-wrap" }}>{output.stderr}</pre>
-        )}
-        {output && !output.stdout && !output.stderr && (
-          <span style={{ color: "var(--ink-2)" }}>ran with no output</span>
-        )}
-      </div>
+      {isHtml ? (
+        <div
+          style={{
+            borderTop: "1px solid var(--line)",
+            background: "#fff",
+            minHeight: 180,
+            maxHeight: 360,
+          }}
+        >
+          <iframe
+            key={previewKey}
+            title="preview"
+            srcDoc={code}
+            sandbox=""
+            style={{ width: "100%", height: 260, border: "none", display: "block" }}
+          />
+        </div>
+      ) : (
+        <div
+          style={{
+            borderTop: "1px solid var(--line)",
+            background: "#000",
+            padding: 14,
+            fontFamily: "var(--mono)",
+            fontSize: 12.5,
+            minHeight: 90,
+            maxHeight: 260,
+            overflowY: "auto",
+          }}
+        >
+          {!output && !error && !running && (
+            <span style={{ color: "var(--ink-2)" }}>output will appear here</span>
+          )}
+          {running && <span style={{ color: "var(--ink-2)" }}>running…</span>}
+          {error && <span style={{ color: "var(--err)" }}>{error}</span>}
+          {output?.stdout && <pre style={{ margin: 0, color: "var(--ink-0)", whiteSpace: "pre-wrap" }}>{output.stdout}</pre>}
+          {output?.stderr && (
+            <pre style={{ margin: "8px 0 0", color: "var(--err)", whiteSpace: "pre-wrap" }}>{output.stderr}</pre>
+          )}
+          {output && !output.stdout && !output.stderr && (
+            <span style={{ color: "var(--ink-2)" }}>ran with no output</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
+

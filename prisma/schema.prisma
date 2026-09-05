@@ -102,6 +102,21 @@ model LessonProgress {
   @@unique([userId, lessonId])
 }
 
+// ---------- Library (linked free/open-source books) ----------
+
+model Book {
+  id          String @id @default(cuid())
+  slug        String @unique
+  title       String
+  author      String
+  level       Int // 1 (pure beginner) through 10 (advanced/moderate-expert)
+  subject     String // "python" | "html-css" | "ai" | "general"
+  description String
+  url         String // link to the free/legal source (Project Gutenberg, official free ebook, author site, etc.)
+  license     String // e.g. "CC BY-SA 4.0", "Public Domain", "Free to read online"
+  order       Int    @default(0)
+}
+
 model Streak {
   id            String   @id @default(cuid())
   userId        String   @unique
