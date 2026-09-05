@@ -46,7 +46,7 @@ export async function POST(req: Request) {
 
   let pistonRes;
   try {
-    pistonRes = await fetch(`${pistonUrl.replace(/\/$/, "")}/api/v2/execute`, {
+    pistonRes = await fetch(`${pistonUrl.replace(/\/$/, "")}/execute`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
